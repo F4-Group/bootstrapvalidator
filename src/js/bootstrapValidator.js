@@ -417,6 +417,38 @@ if (typeof jQuery === 'undefined') {
                                         break;
                                 }
                             });
+                        $icon
+                            .off('mouseenter.container.bv')
+                            .on('mouseenter.container.bv', function() {
+                                switch (container) {
+                                    case 'tooltip':
+                                        //don't call 'show' if already shown
+                                        $(this).tooltip('show');
+                                        break;
+                                    case 'popover':
+                                        //don't call 'show' if already shown
+                                        $(this).popover('show');
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            })
+                            // hide tooltip/popup on mouseleave only if input doesn't have focus
+                            .off('mouseleave.container.bv')
+                            .on('mouseleave.container.bv', function() {
+                                if (!$field.is(':focus')) {
+                                    switch (container) {
+                                        case 'tooltip':
+                                            $(this).tooltip('hide');
+                                            break;
+                                        case 'popover':
+                                            $(this).popover('hide');
+                                            break;
+                                        default:
+                                            break;
+                                    }
+                                }
+                            });
                     }
                 }
             }
@@ -1123,26 +1155,37 @@ if (typeof jQuery === 'undefined') {
                 switch (true) {
                     // Only show the first error message if it is placed inside a tooltip ...
                     case ($icon && 'tooltip' === container):
-                        (isValidField === false)
-                                ? $icon.css('cursor', 'pointer').tooltip('destroy').tooltip({
-                                    container: 'body',
-                                    html: true,
-                                    placement: 'auto top',
-                                    title: $allErrors.filter('[data-bv-result="' + that.STATUS_INVALID + '"]').eq(0).html()
-                                })
-                                : $icon.css('cursor', '').tooltip('destroy');
+                        if (isValidField === false) {
+                            $icon.css('cursor', 'pointer').tooltip('destroy').tooltip({
+                                container: 'body',
+                                html: true,
+                                placement: 'auto top',
+                                trigger: 'manual click',
+                                title: $allErrors.filter('[data-bv-result="' + that.STATUS_INVALID + '"]').eq(0).html()
+                            });
+                            if ($field.is(':focus')) {
+                                $icon.tooltip('show');
+                            }
+                        } else {
+                            $icon.css('cursor', '').tooltip('destroy');
+                        }
                         break;
                     // ... or popover
                     case ($icon && 'popover' === container):
-                        (isValidField === false)
-                                ? $icon.css('cursor', 'pointer').popover('destroy').popover({
-                                    container: 'body',
-                                    content: $allErrors.filter('[data-bv-result="' + that.STATUS_INVALID + '"]').eq(0).html(),
-                                    html: true,
-                                    placement: 'auto top',
-                                    trigger: 'hover click'
-                                })
-                                : $icon.css('cursor', '').popover('destroy');
+                        if (isValidField === false) {
+                            $icon.css('cursor', 'pointer').popover('destroy').popover({
+                                container: 'body',
+                                content: $allErrors.filter('[data-bv-result="' + that.STATUS_INVALID + '"]').eq(0).html(),
+                                html: true,
+                                placement: 'auto top',
+                                trigger: 'manual click'
+                            });
+                            if ($field.is(':focus')) {
+                                $icon.popover('show');
+                            }
+                        } else {
+                            $icon.css('cursor', '').popover('destroy');
+                        }
                         break;
                     default:
                         (status === this.STATUS_INVALID) ? $errors.show() : $errors.hide();
