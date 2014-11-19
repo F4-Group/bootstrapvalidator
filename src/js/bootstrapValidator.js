@@ -727,10 +727,14 @@ if (typeof jQuery === 'undefined') {
                 events                   = $.map(trigger, function(item) {
                     return item + '.' + namespace + '.bv';
                 }).join(' ');
+            //In some browsers,
+            //document.createElement('input').validity.hasOwnProperty('badInput') evaluates to false
+            //JSON.stringify(document.createElement('input').validity) evaluates to "{}"
+            //We need to copy the ValidityState in a new object (here with $.extend) to serialize it
             $fields.each(function() {
                 $(this).attr(previousValueAttrName, $(this).val());
                 if (this.validity) {
-                    var validityStr = JSON.stringify(this.validity);
+                    var validityStr = JSON.stringify($.extend({}, this.validity));
                     $(this).attr(previousValidityAttrName, validityStr);
                 }
             });
@@ -740,7 +744,7 @@ if (typeof jQuery === 'undefined') {
                     var val = $(this).val();
                     if ($(this).attr(previousValueAttrName) === val) {
                         if (this.validity) {
-                            var validityStr = JSON.stringify(this.validity);
+                            var validityStr = JSON.stringify($.extend({}, this.validity));
                             handleEvent = validityStr !== $(this).attr(previousValidityAttrName);
                             $(this).attr(previousValidityAttrName, validityStr);
                         } else {
