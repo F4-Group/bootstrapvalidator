@@ -2,9 +2,9 @@
  * BootstrapValidator (http://bootstrapvalidator.com)
  * The best jQuery plugin to validate form fields. Designed to use with Bootstrap 3
  *
- * @version     v0.5.3-dev, built on 2014-11-04 8:21:42 AM
+ * @version     v0.5.3-dev, built on 2016-09-09 5:31:51 PM
  * @author      https://twitter.com/nghuuphuoc
- * @copyright   (c) 2013 - 2014 Nguyen Huu Phuoc
+ * @copyright   (c) 2013 - 2016 Nguyen Huu Phuoc
  * @license     MIT
  */
 if (typeof jQuery === 'undefined') {
@@ -284,8 +284,7 @@ if (typeof jQuery === 'undefined') {
                 total     = fields.length,
                 type      = fields.attr('type'),
                 updateAll = (total === 1) || ('radio' === type) || ('checkbox' === type),
-                event     = ('radio' === type || 'checkbox' === type || 'file' === type || 'SELECT' === fields.eq(0).get(0).tagName) ? 'change' : this._changeEvent,
-                trigger   = (this.options.fields[field].trigger || this.options.trigger || event).split(' '),
+                trigger   = this._getFieldTrigger(fields.eq(0)),
                 events    = $.map(trigger, function(item) {
                     return item + '.update.bv';
                 }).join(' ');
@@ -307,7 +306,7 @@ if (typeof jQuery === 'undefined') {
                 $parent.find('i[data-bv-icon-for="' + field + '"]').remove();
 
                 // Whenever the user change the field value, mark it as not validated yet
-                $field.off(events).on(events, function() {
+                this._onFieldInput($field, 'update', function() {
                     that.updateStatus($(this), that.STATUS_NOT_VALIDATED);
                 });
                 
@@ -409,6 +408,38 @@ if (typeof jQuery === 'undefined') {
                                         break;
                                 }
                             });
+                        $icon
+                            .off('mouseenter.container.bv')
+                            .on('mouseenter.container.bv', function() {
+                                switch (container) {
+                                    case 'tooltip':
+                                        //don't call 'show' if already shown
+                                        $(this).tooltip('show');
+                                        break;
+                                    case 'popover':
+                                        //don't call 'show' if already shown
+                                        $(this).popover('show');
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            })
+                            // hide tooltip/popup on mouseleave only if input doesn't have focus
+                            .off('mouseleave.container.bv')
+                            .on('mouseleave.container.bv', function() {
+                                if (!$field.is(':focus')) {
+                                    switch (container) {
+                                        case 'tooltip':
+                                            $(this).tooltip('hide');
+                                            break;
+                                        case 'popover':
+                                            $(this).popover('hide');
+                                            break;
+                                        default:
+                                            break;
+                                    }
+                                }
+                            });
                     }
                 }
             }
@@ -447,25 +478,11 @@ if (typeof jQuery === 'undefined') {
                 });
 
             // Set live mode
-            events = $.map(trigger, function(item) {
-                return item + '.live.bv';
-            }).join(' ');
-            switch (this.options.live) {
-                case 'submitted':
-                    break;
-                case 'disabled':
-                    fields.off(events);
-                    break;
-                case 'enabled':
-                /* falls through */
-                default:
-                    fields.off(events).on(events, function() {
-                        if (that._exceedThreshold($(this))) {
-                            that.validateField($(this));
-                        }
-                    });
-                    break;
-            }
+            this.onLiveChange(fields, 'live', function() {
+                if (that._exceedThreshold($(this))) {
+                    that.validateField($(this));
+                }
+            });
 
             fields.trigger($.Event(this.options.events.fieldInit), {
                 bv: this,
@@ -681,6 +698,68 @@ if (typeof jQuery === 'undefined') {
             this.disableSubmitButtons(true).defaultSubmit();
         },
 
+        /*
+         * Get a field changed trigger event
+         *
+         * @param {jQuery} $field The field element
+         * @returns {String[]} The event names triggered on field change
+         */
+        _getFieldTrigger: function($field) {
+            var type      = $field.attr('type'),
+                name      = $field.attr('data-bv-field'),
+                event     = ('radio' === type || 'checkbox' === type || 'file' === type || 'SELECT' === $field.get(0).tagName) ? 'change' : this._changeEvent,
+                trigger   = (this.options.fields[name].trigger || this.options.trigger || event).split(' ');
+            return trigger;
+         },
+        
+        /*
+         * Bind a field input event
+         *
+         * @param {jQuery} $fields The field elements
+         * @param {String} namespace The event namespace
+         * @param {Function} handler The handler function
+         */
+        _onFieldInput: function($fields, namespace, handler) {
+            var that                     = this,
+                previousValueAttrName    = 'data-bv-previous-' + namespace + '-value',
+                previousValidityAttrName = 'data-bv-previous-' + namespace + '-validity',
+                trigger                  = this._getFieldTrigger($fields.eq(0)),
+                events                   = $.map(trigger, function(item) {
+                    return item + '.' + namespace + '.bv';
+                }).join(' ');
+            //In some browsers,
+            //document.createElement('input').validity.hasOwnProperty('badInput') evaluates to false
+            //JSON.stringify(document.createElement('input').validity) evaluates to "{}"
+            //We need to copy the ValidityState in a new object (here with $.extend) to serialize it
+            $fields.each(function() {
+                $(this).attr(previousValueAttrName, $(this).val());
+                if (this.validity) {
+                    var validityStr = JSON.stringify($.extend({}, this.validity));
+                    $(this).attr(previousValidityAttrName, validityStr);
+                }
+            });
+            $fields.off(events).on(events, function(e) {
+                var handleEvent = true;
+                if (e.type === that._changeEvent) {
+                    var val = $(this).val();
+                    if ($(this).attr(previousValueAttrName) === val) {
+                        if (this.validity) {
+                            var validityStr = JSON.stringify($.extend({}, this.validity));
+                            handleEvent = validityStr !== $(this).attr(previousValidityAttrName);
+                            $(this).attr(previousValidityAttrName, validityStr);
+                        } else {
+                            handleEvent = false;
+                        }
+                    }
+                    $(this).attr(previousValueAttrName, val);
+                }
+                if (handleEvent) {
+                    handler.apply(this, arguments);
+                }
+            });
+            
+        },
+
         /**
          * Called after validating a field element
          *
@@ -761,6 +840,31 @@ if (typeof jQuery === 'undefined') {
                 return false;
             }
             return this.options[option] === 'true' || this.options[option] === true;
+        },
+
+        /**
+         * Get the jQuery fields and name from the field name or element
+         *
+         * @param {String|jQuery} field The field name or field element
+         * @returns {Object} an object with field containing the field name and $fields the field elements
+         */
+        _getFields: function(field) {
+            var $fields = $([]);
+            switch (typeof field) {
+                case 'object':
+                    $fields = field;
+                    field   = field.attr('data-bv-field');
+                    break;
+                case 'string':
+                    $fields = this.getFieldElements(field);
+                    break;
+                default:
+                    break;
+            }
+            return {
+                field: field,
+                $fields: $fields
+            };
         },
 
         // ---
@@ -984,6 +1088,19 @@ if (typeof jQuery === 'undefined') {
                 $(this).data('bv.messages').find('.help-block[data-bv-validator="' + validator + '"][data-bv-for="' + field + '"]').html(message);
             });
         },
+
+        /**
+         * Get the validating result of field
+         *
+         * @param {String|jQuery} field The field name or field element
+         * @param {String} validatorName The validator name
+         * @returns {String} The status. Can be 'NOT_VALIDATED', 'VALIDATING', 'INVALID' or 'VALID'
+         */
+        getStatus: function(field, validatorName) {
+            var fields = this._getFields(field),
+                $field = fields.$fields.eq(0);
+            return $field.data('bv.result.' + validatorName);
+        },
         
         /**
          * Update all validating results of field
@@ -1115,26 +1232,37 @@ if (typeof jQuery === 'undefined') {
                 switch (true) {
                     // Only show the first error message if it is placed inside a tooltip ...
                     case ($icon && 'tooltip' === container):
-                        (isValidField === false)
-                                ? $icon.css('cursor', 'pointer').tooltip('destroy').tooltip({
-                                    container: 'body',
-                                    html: true,
-                                    placement: 'auto top',
-                                    title: $allErrors.filter('[data-bv-result="' + that.STATUS_INVALID + '"]').eq(0).html()
-                                })
-                                : $icon.css('cursor', '').tooltip('destroy');
+                        if (isValidField === false) {
+                            $icon.css('cursor', 'pointer').tooltip('destroy').tooltip({
+                                container: 'body',
+                                html: true,
+                                placement: 'auto top',
+                                trigger: 'manual click',
+                                title: $allErrors.filter('[data-bv-result="' + that.STATUS_INVALID + '"]').eq(0).html()
+                            });
+                            if ($field.is(':focus')) {
+                                $icon.tooltip('show');
+                            }
+                        } else {
+                            $icon.css('cursor', '').tooltip('destroy');
+                        }
                         break;
                     // ... or popover
                     case ($icon && 'popover' === container):
-                        (isValidField === false)
-                                ? $icon.css('cursor', 'pointer').popover('destroy').popover({
-                                    container: 'body',
-                                    content: $allErrors.filter('[data-bv-result="' + that.STATUS_INVALID + '"]').eq(0).html(),
-                                    html: true,
-                                    placement: 'auto top',
-                                    trigger: 'hover click'
-                                })
-                                : $icon.css('cursor', '').popover('destroy');
+                        if (isValidField === false) {
+                            $icon.css('cursor', 'pointer').popover('destroy').popover({
+                                container: 'body',
+                                content: $allErrors.filter('[data-bv-result="' + that.STATUS_INVALID + '"]').eq(0).html(),
+                                html: true,
+                                placement: 'auto top',
+                                trigger: 'manual click'
+                            });
+                            if ($field.is(':focus')) {
+                                $icon.popover('show');
+                            }
+                        } else {
+                            $icon.css('cursor', '').popover('destroy');
+                        }
                         break;
                     default:
                         (status === this.STATUS_INVALID) ? $errors.show() : $errors.hide();
@@ -1622,15 +1750,76 @@ if (typeof jQuery === 'undefined') {
         },
 
         /**
+         * Attach a handler function for a field live change event
+         *
+         * @param {jQuery[]} $fields The field elements
+         * @param {String} namespace The event namespace
+         * @param {Function} handler The handler function
+         */
+        onLiveChange: function($fields, namespace, handler) {
+            var that    = this,
+                trigger = this._getFieldTrigger($fields.eq(0)),
+                events  = $.map(trigger, function(item) {
+                    return item + '.' + namespace + '.bv';
+                }).join(' ');
+            switch (this.options.live) {
+                case 'submitted':
+                    break;
+                case 'disabled':
+                    $fields.off(events);
+                    break;
+                case 'enabled':
+                /* falls through */
+                default:
+                    this._onFieldInput($fields, namespace, handler);
+                    break;
+            }
+        },
+
+        /**
+         * Detach a handler function for a field live change event
+         *
+         * @param {jQuery[]} $fields The field elements
+         * @param {String} namespace The event namespace
+         */
+        offLiveChange: function($fields, namespace) {
+            var trigger = this._getFieldTrigger($fields.eq(0)),
+                events  = $.map(trigger, function(item) {
+                    return item + '.' + namespace + '.bv';
+                }).join(' ');
+            $fields.off(events);
+        },
+
+        /**
          * Destroy the plugin
          * It will remove all error messages, feedback icons and turn off the events
          */
         destroy: function() {
-            var field, fields, $field, validator, $icon, group;
+            var field, fields, $field, validator, $icon, group, i;
+            // Destroy the validators first
+            for (field in this.options.fields) {
+                fields    = this.getFieldElements(field);
+                for (i = 0; i < fields.length; i++) {
+                    $field = fields.eq(i);
+                    for (validator in this.options.fields[field].validators) {
+                        if ($field.data('bv.dfs.' + validator)) {
+                            $field.data('bv.dfs.' + validator).reject();
+                        }
+                        $field.removeData('bv.result.' + validator)
+                              .removeData('bv.response.' + validator)
+                              .removeData('bv.dfs.' + validator);
+
+                        // Destroy the validator
+                        if ('function' === typeof $.fn.bootstrapValidator.validators[validator].destroy) {
+                            $.fn.bootstrapValidator.validators[validator].destroy(this, $field, this.options.fields[field].validators[validator]);
+                        }
+                    }
+                }
+            }
             for (field in this.options.fields) {
                 fields    = this.getFieldElements(field);
                 group     = this.options.fields[field].group || this.options.group;
-                for (var i = 0; i < fields.length; i++) {
+                for (i = 0; i < fields.length; i++) {
                     $field = fields.eq(i);
                     $field
                         // Remove all error messages
@@ -1663,20 +1852,6 @@ if (typeof jQuery === 'undefined') {
                         }
                     }
                     $field.removeData('bv.icon');
-
-                    for (validator in this.options.fields[field].validators) {
-                        if ($field.data('bv.dfs.' + validator)) {
-                            $field.data('bv.dfs.' + validator).reject();
-                        }
-                        $field.removeData('bv.result.' + validator)
-                              .removeData('bv.response.' + validator)
-                              .removeData('bv.dfs.' + validator);
-
-                        // Destroy the validator
-                        if ('function' === typeof $.fn.bootstrapValidator.validators[validator].destroy) {
-                            $.fn.bootstrapValidator.validators[validator].destroy(this, $field, this.options.fields[field].validators[validator]);
-                        }
-                    }
                 }
             }
 
@@ -3034,7 +3209,7 @@ if (typeof jQuery === 'undefined') {
 
             // Email address regular expression
             // http://stackoverflow.com/questions/46155/validate-email-address-in-javascript
-            var emailRegExp   = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/,
+            var emailRegExp   = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/,
                 allowMultiple = options.multiple === true || options.multiple === 'true';
 
             if (allowMultiple) {
@@ -4976,6 +5151,43 @@ if (typeof jQuery === 'undefined') {
         },
 
         /**
+         * Bind the validator on the live change of the field to compare with current one
+         *
+         * @param {BootstrapValidator} validator The validator plugin instance
+         * @param {jQuery} $field Field element
+         * @param {Object} options Consists of the following key:
+         * - field: The name of field that will be used to compare with current one
+         */
+        init: function(validator, $field, options) {
+            var compareWith = validator.getFieldElements(options.field);
+            if (compareWith === null || compareWith.length === 0) {
+                return;
+            }
+            validator.onLiveChange(compareWith, 'live_identical', function() {
+                var status = validator.getStatus($field, 'identical');
+                if (status !== validator.STATUS_NOT_VALIDATED) {
+                    validator.revalidateField($field);
+                }
+            });
+        },
+
+        /**
+         * Unbind the validator on the live change of the field to compare with current one
+         *
+         * @param {BootstrapValidator} validator The validator plugin instance
+         * @param {jQuery} $field Field element
+         * @param {Object} options Consists of the following key:
+         * - field: The name of field that will be used to compare with current one
+         */
+        destroy: function(validator, $field, options) {
+            var compareWith = validator.getFieldElements(options.field);
+            if (compareWith === null || compareWith.length === 0) {
+                return;
+            }
+            validator.offLiveChange(compareWith, 'live_identical');
+        },
+
+        /**
          * Check if input value equals to value of particular one
          *
          * @param {BootstrapValidator} validator The validator plugin instance
@@ -4986,10 +5198,6 @@ if (typeof jQuery === 'undefined') {
          */
         validate: function(validator, $field, options) {
             var value = $field.val();
-            if (value === '') {
-                return true;
-            }
-
             var compareWith = validator.getFieldElements(options.field);
             if (compareWith === null || compareWith.length === 0) {
                 return true;
@@ -5806,9 +6014,9 @@ if (typeof jQuery === 'undefined') {
                     break;
 
                 case 'FR':
-                    // http://regexr.com/39a2p
+                    // http://regexr.com/3c4go
                     value   = $.trim(value);
-                    isValid = (/^(?:(?:(?:\+|00)33[ ]?(?:\(0\)[ ]?)?)|0){1}[1-9]{1}([ .-]?)(?:\d{2}\1?){3}\d{2}$/).test(value);
+                    isValid = (/^(?:(?:(?:\+|00)33[ ]?(?:\(0\)[ ]?)?)|0){1}(?:[1-9]{1}([\s .-]?)(?:\d{2}\1?){3}\d{2}|8\d{2}([\s .-]?)(?:(?:\d{3}\2?)\d{3}|(?:\d{2}\2?){2}\d{2})|([\s .-]?)8\d{2}\3(?:(?:\d{3}\3?)\d{3}|(?:\d{2}\3?){2}\d{2}))$/).test(value);
                     break;
 
             	case 'GB':

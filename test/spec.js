@@ -1793,9 +1793,6 @@ describe('i18n', function() {
                 password: {
                     validators: {
                         notEmpty: {},
-                        identical: {
-                            field: 'confirmPassword'
-                        },
                         different: {
                             field: 'username'
                         }
@@ -1912,7 +1909,7 @@ describe('i18n', function() {
         this.$password.val('@S3cur3P@@w0rd');
         this.$confirm.val('notMatch');
         this.bv.validate();
-        expect(this.bv.getMessages('password', 'identical')[0]).toEqual(i18n.identical['default']);
+        expect(this.bv.getMessages('confirmPassword', 'identical')[0]).toEqual(i18n.identical['default']);
 
         this.bv.resetForm();
         this.$age.val('notDigit');
@@ -1949,6 +1946,88 @@ describe('i18n', function() {
         this.bv.validate();
         expect(this.bv.getMessages('programs[]', 'choice')[0]).toEqual(format(i18n.choice.between, [2, 4]));
     });
+});
+
+describe('live', function() {
+    // Override the options
+    $.extend($.fn.bootstrapValidator.DEFAULT_OPTIONS, {
+        feedbackIcons: {
+            valid: 'glyphicon glyphicon-ok',
+            invalid: 'glyphicon glyphicon-remove',
+            validating: 'glyphicon glyphicon-refresh'
+        }
+    });
+
+    beforeEach(function(done) {
+        $([
+            '<form class="form-horizontal" id="inputForm">',
+                '<div class="form-group">',
+                    '<textarea name="text" data-bv-notempty placeholder="Text" />',
+                '</div>',
+                '<div class="form-group">',
+                    '<input type="text" name="input1" data-bv-notempty placeholder="Text" />',
+                '</div>',
+                '<div class="form-group">',
+                    '<input type="text" name="input2" data-bv-notempty placeholder="Caf�" />',
+                '</div>',
+            '</form>'
+        ].join('\n')).appendTo('body');
+
+        $('#inputForm').bootstrapValidator();
+
+        this.bv      = $('#inputForm').data('bootstrapValidator');
+        this.$text   = this.bv.getFieldElements('text');
+        this.$input1 = this.bv.getFieldElements('input1');
+        this.$input2 = this.bv.getFieldElements('input2');
+        setTimeout(done, 0);
+    });
+
+    afterEach(function() {
+        $('#inputForm').bootstrapValidator('destroy').remove();
+    });
+
+    // #1040
+    it('fields should not be validated on init', function() {
+        expect(this.bv.getMessages(this.$text)).toEqual([]);
+        expect(this.bv.getMessages(this.$input1)).toEqual([]);
+        expect(this.bv.getMessages(this.$input2)).toEqual([]);
+    });
+
+    // IE11, see https://connect.microsoft.com/IE/feedback/details/810538/ie-11-fires-input-event-on-focus
+    it('fields should not be validated on focus', function() {
+        this.$text.focus();
+        expect(this.bv.getMessages(this.$text)).toEqual([]);
+        this.$input1.focus();
+        expect(this.bv.getMessages(this.$input1)).toEqual([]);
+        this.$input2.focus();
+        expect(this.bv.getMessages(this.$input2)).toEqual([]);
+    });
+
+    it('fields should be validated on input', function() {
+        fill(this.$input1, 'text');
+        expect(this.bv.getMessages(this.$input1)).toEqual([]);
+        fill(this.$input1, '');
+        expect(this.bv.getMessages(this.$input1)).not.toEqual([]);
+    });
+
+    it('fields should not be unvalidated on blur', function() {
+        this.$input1.focus();
+        triggerInput(this.$input1);
+        fill(this.$input1, 'text');
+        fill(this.$input1, '');
+        this.$input1.blur();
+        expect(this.bv.getMessages(this.$input1)).not.toEqual([]);
+    });
+
+    function fill($input, val) {
+        $input.val(val);
+        triggerInput($input);
+    }
+
+    function triggerInput($input) {
+        $input.trigger("keyup"); // for IE9
+        $input.trigger("input"); // for anything else
+    }
 });
 
 describe('message', function() {
@@ -2645,6 +2724,106 @@ describe('callback', function() {
         this.bv.validate();
         expect(this.bv.isValidField('declarativeCaptcha')).toBeTruthy();
     });
+});
+
+describe('choice', function() {
+    beforeEach(function() {
+        $([
+            '<form class="form-horizontal" id="choiceForm">',
+                '<div class="form-group">',
+                    '<input type="checkbox" name="group1" value="val1" />',
+                '</div>',
+                '<div class="form-group">',
+                    '<input type="checkbox" name="group1" value="val2" />',
+                '</div>',
+                '<div class="form-group">',
+                    '<input type="checkbox" name="group1" value="val3" />',
+                '</div>',
+                '<div class="form-group">',
+                    '<input type="checkbox" name="group1" value="val4" />',
+                '</div>',
+                '<div class="form-group">',
+                    '<input type="checkbox" name="group1" value="val5" />',
+                '</div>',
+                '<div class="form-group">',
+                    '<input type="checkbox" name="group2" value="val1" />',
+                '</div>',
+            '</form>'
+        ].join('\n')).appendTo('body');
+
+        $('#choiceForm').bootstrapValidator({
+            fields: {
+                group1: {
+                    validators: {
+                        choice: {
+                            min: 2,
+                            max: 3,
+                            message: 'Please choose 2 - 3 choices'
+                        }
+                    }
+                },
+                group2: {
+                    validators: {
+                        choice: {
+                            min: 1,
+                            max: 1,
+                            message: 'Please check the checkbox'
+                        }
+                    }
+                }
+            }
+        });
+
+        this.bv   = $('#choiceForm').data('bootstrapValidator');
+    });
+
+    afterEach(function() {
+        $('#choiceForm').bootstrapValidator('destroy').remove();
+    });
+
+    it('Not enough choices', function() {
+        this.bv.resetForm();
+        check('group1', 'val1', true);
+        this.bv.validate();
+        expect(this.bv.isValid()).toBeFalsy();
+    });
+
+    it('Enough choices', function() {
+        this.bv.resetForm();
+        check('group1', 'val1', true);
+        check('group1', 'val2', true);
+        check('group2', 'val1', true);
+        this.bv.validate();
+        expect(this.bv.isValid()).toBeTruthy();
+    });
+
+    it('Multiple validate', function() {
+        this.bv.resetForm();
+        check('group1', 'val1', true);
+        check('group1', 'val2', true);
+        this.bv.validate();
+        expect(this.bv.isValid()).toBeFalsy();
+        check('group2', 'val1', true);
+        this.bv.validate();
+        expect(this.bv.isValid()).toBeTruthy();
+    });
+
+    it('Too much choices', function() {
+        this.bv.resetForm();
+        check('group1', 'val1', true);
+        check('group1', 'val2', true);
+        check('group1', 'val3', true);
+        check('group1', 'val4', true);
+        check('group2', 'val1', true);
+        this.bv.validate();
+        expect(this.bv.isValid()).toBeFalsy();
+    });
+
+    function check(name, value, checked) {
+        $('input[name='+name+'][value='+value+']')
+            .prop('checked', true)
+            .trigger('change');
+    }
 });
 
 describe('color', function() {
