@@ -4512,7 +4512,6 @@ describe('emailAddress', function() {
     });
 
     var validEmailAddresses = [
-        'admin@mailserver1',
         'niceandsimple@example.com',
         'very.common@example.com',
         'a.little.lengthy.but.fine@dept.example.com',
@@ -4533,7 +4532,8 @@ describe('emailAddress', function() {
         'a"b(c)d,e:f;gi[j\k]l@example.com',
         'just"not"right@example.com',
         'this is"not\allowed@example.com',
-        'this\ still\"not\\allowed@example.com'
+        'this\ still\"not\\allowed@example.com',
+        'admin@mailserver1' // theoretically valid, but useless for practical uses
     ];
 
     var validMultipleEmailAddressesForDefaultSeparators = [
