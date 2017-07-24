@@ -527,6 +527,12 @@ if (typeof jQuery === 'undefined') {
          */
         _getMessageContainer: function($field, group) {
             var $parent = $field.parent();
+
+            if ($parent.length === 0) {
+                console.error("Missing group marker " + group + " for ", $field);
+                return $field;
+            }
+
             if ($parent.is(group)) {
                 return $parent;
             }
