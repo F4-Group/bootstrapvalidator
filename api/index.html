@@ -17,8 +17,8 @@
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Open+Sans:300,400,700">
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Lato:300,400,700">
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Cardo:400,400italic,700">
-<link rel="stylesheet" href="/vendor/pygments/github.css">
-<link rel="stylesheet" href="/asset/css/style.css">
+<link rel="stylesheet" href="../vendor/pygments/github.css">
+<link rel="stylesheet" href="../asset/css/style.css">
 
 <!--[if lt IE 9]>
 <script src="//oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
@@ -45,52 +45,52 @@ _gaq.push(['_trackPageview']);
 <body>
     <nav class="doc-nav" tabindex="-1">
     <ul>
-        <li><a href="/">Home</a></li>
+        <li><a href="../">Home</a></li>
     
         
             
         
-        <li class=""><a href="/download/">Download</a></li>
+        <li class=""><a href="../download/">Download</a></li>
     
         
             
         
-        <li class=""><a href="/getting-started/">Getting Started</a></li>
+        <li class=""><a href="../getting-started/">Getting Started</a></li>
     
         
             
         
-        <li class=""><a href="/settings/">Settings</a></li>
+        <li class=""><a href="../settings/">Settings</a></li>
     
         
             
         
-        <li class=""><a href="/validators/">Validators</a></li>
+        <li class=""><a href="../validators/">Validators</a></li>
     
         
             
         
-        <li class="doc-nav-active"><a href="/api/">API</a></li>
+        <li class="doc-nav-active"><a href="../api/">API</a></li>
     
         
             
         
-        <li class=""><a href="/examples/">Examples</a></li>
+        <li class=""><a href="../examples/">Examples</a></li>
     
         
             
         
-        <li class=""><a href="/developing/">Developing</a></li>
+        <li class=""><a href="../developing/">Developing</a></li>
     
         
             
         
-        <li class=""><a href="/news/">News</a></li>
+        <li class=""><a href="../news/">News</a></li>
     
         
             
         
-        <li class=""><a href="/license/">License</a></li>
+        <li class=""><a href="../license/">License</a></li>
     
     </ul>
 
@@ -118,7 +118,7 @@ _gaq.push(['_trackPageview']);
 
     <div id="main" class="doc-content-wrapper">
         <div class="doc-notification">
-    <i class="fa fa-bell-o"></i> <a href="/news/v0.5.3-released/">v0.5.3</a> is released on 2014.11.05!
+    <i class="fa fa-bell-o"></i> <a href="../news/v0.5.3-released/">v0.5.3</a> is released on 2014.11.05!
 </div>
 
         <div class="doc-content-container">
@@ -201,7 +201,7 @@ _gaq.push(['_trackPageview']);
         </tbody>
     </table>
 
-    <p>If you want to do additional task after adding new field, then trigger the <a href="/settings/#event-form">added.field.bv</a> event:</p>
+    <p>If you want to do additional task after adding new field, then trigger the <a href="../settings/#event-form">added.field.bv</a> event:</p>
 
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">$</span><span class="p">(</span><span class="nb">document</span><span class="p">).</span><span class="nx">ready</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">$</span><span class="p">(</span><span class="nx">form</span><span class="p">)</span>
@@ -221,14 +221,14 @@ _gaq.push(['_trackPageview']);
 
     <h4 id="add-field-examples">Example</h4>
     <ul class="doc-list">
-        <li><a href="/examples/adding-dynamic-field/">Adding dynamic field</a></li>
+        <li><a href="../examples/adding-dynamic-field/">Adding dynamic field</a></li>
     </ul>
 </section>
     <section>
     <h3 id="default-submit">defaultSubmit</h3>
 
     <p><code>defaultSubmit(): BootstrapValidator</code> &mdash; Submit the form using default submission.</p>
-    <p>It also does not perform any validations when submitting the form. It might be used when you want to submit the form right inside the <a href="/examples/ajax-submit/">custom submit handler</a>.</p>
+    <p>It also does not perform any validations when submitting the form. It might be used when you want to submit the form right inside the <a href="../examples/ajax-submit/">custom submit handler</a>.</p>
 </section>
     <section>
     <h3 id="destroy">destroy</h3>
@@ -260,7 +260,7 @@ _gaq.push(['_trackPageview']);
 
     <h4 id="disable-submit-buttons-examples">Example</h4>
     <ul class="doc-list">
-        <li><a href="/examples/enabling-submit-button/">Enabling the submit button all the time</a></li>
+        <li><a href="../examples/enabling-submit-button/">Enabling the submit button all the time</a></li>
     </ul>
 </section>
     <section>
@@ -297,14 +297,14 @@ _gaq.push(['_trackPageview']);
 
     <h4 id="enable-field-validators-examples">Example</h4>
     <ul class="doc-list">
-        <li><a href="/examples/enable-validator/">Enable, disable validators</a></li>
+        <li><a href="../examples/enable-validator/">Enable, disable validators</a></li>
     </ul>
 </section>
     <section>
     <h3 id="get-dynamic-option">getDynamicOption</h3>
 
     <p><code>getDynamicOption(field<sup>*</sup>, option<sup>*</sup>): String</code> &mdash; Returns the option value which can be set dynamically.</p>
-    <p>For example, the <a href="/validators/zipCode/">zipCode validator</a> has <code>country</code> option that can be changed dynamically a select element.</p>
+    <p>For example, the <a href="../validators/zipCode/">zipCode validator</a> has <code>country</code> option that can be changed dynamically a select element.</p>
 
     <table class="table table-condensed">
         <thead>
@@ -323,7 +323,7 @@ _gaq.push(['_trackPageview']);
             <tr>
                 <td><code>option</code></td>
                 <td>String</td>
-                <td>The <a href="/settings/#dynamic-option">dynamic option</a></td>
+                <td>The <a href="../settings/#dynamic-option">dynamic option</a></td>
             </tr>
         </tbody>
     </table>
@@ -387,7 +387,7 @@ _gaq.push(['_trackPageview']);
 
     <h4 id="get-messages-examples">Example</h4>
     <ul class="doc-list">
-        <li><a href="/examples/showing-message-custom-area/#using-events">Showing messages in custom area</a></li>
+        <li><a href="../examples/showing-message-custom-area/#using-events">Showing messages in custom area</a></li>
     </ul>
 </section>
     <section>
@@ -496,7 +496,7 @@ _gaq.push(['_trackPageview']);
         </tbody>
     </table>
 
-    <p>By triggering the <a href="/settings/#event-form">removed.field.bv</a> event, you can perform additional task after removing given field:</p>
+    <p>By triggering the <a href="../settings/#event-form">removed.field.bv</a> event, you can perform additional task after removing given field:</p>
 
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">$</span><span class="p">(</span><span class="nb">document</span><span class="p">).</span><span class="nx">ready</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">$</span><span class="p">(</span><span class="nx">form</span><span class="p">)</span>
@@ -515,7 +515,7 @@ _gaq.push(['_trackPageview']);
 
     <h4 id="remove-field-examples">Example</h4>
     <ul class="doc-list">
-        <li><a href="/examples/adding-dynamic-field/">Adding dynamic field</a></li>
+        <li><a href="../examples/adding-dynamic-field/">Adding dynamic field</a></li>
     </ul>
 </section>
     <section>
@@ -616,7 +616,7 @@ _gaq.push(['_trackPageview']);
 
         <div class="tab-content">
             <div class="tab-pane active" id="datepicker-form-tab">
-            <link href="/vendor/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css" rel="stylesheet" />
+            <link href="../vendor/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css" rel="stylesheet" />
 <style type="text/css">
 #datetimeForm .has-feedback .form-control-feedback {
     top: 0;
@@ -625,7 +625,7 @@ _gaq.push(['_trackPageview']);
 </style>
 
 <script src="//oss.maxcdn.com/momentjs/2.8.2/moment.min.js"></script>
-<script src="/vendor/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+<script src="../vendor/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
 
 <form id="datetimeForm" class="form-horizontal">
     <div class="form-group">
@@ -705,7 +705,7 @@ _gaq.push(['_trackPageview']);
     </div>
 
     <ul class="doc-list">
-        <li><a href="/examples/#compatibility">Play with other plugins</a></li>
+        <li><a href="../examples/#compatibility">Play with other plugins</a></li>
     </ul>
 </section>
 
@@ -1096,7 +1096,7 @@ $(document).ready(function() {
     <script async type="text/javascript" src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=bootstrapvalidatorcom" id="_carbonads_js"></script>
     
 
-<script src="/vendor/tocjs/js/toc.min.js"></script>
+<script src="../vendor/tocjs/js/toc.min.js"></script>
 <script>
 $(function() {
     $('[data-toggle="tooltip"]').tooltip();
